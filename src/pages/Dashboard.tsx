@@ -7,34 +7,42 @@ const buddyModes = [
   {
     id: "chat",
     title: "Chat Buddy",
+    emoji: "🗨️",
     description: "Practice writing and get real-time feedback",
     icon: MessageCircle,
     route: "/chatbuddy",
-    gradient: "from-blue-400 to-blue-600",
+    gradient: "from-blue-400/20 to-cyan-400/20",
+    iconBg: "bg-blue-500",
   },
   {
     id: "talk",
     title: "Talk Buddy",
+    emoji: "🗣️",
     description: "Have voice conversations and improve speaking",
     icon: Mic,
     route: "/talkbuddy",
-    gradient: "from-purple-400 to-purple-600",
+    gradient: "from-purple-400/20 to-pink-400/20",
+    iconBg: "bg-purple-500",
   },
   {
     id: "listen",
     title: "Listen Buddy",
+    emoji: "🎧",
     description: "Enhance comprehension with AI-generated content",
     icon: Headphones,
     route: "/listenbuddy",
-    gradient: "from-green-400 to-green-600",
+    gradient: "from-green-400/20 to-teal-400/20",
+    iconBg: "bg-green-500",
   },
   {
     id: "read",
     title: "Read Buddy",
+    emoji: "📖",
     description: "Read advanced English with pronunciation help",
     icon: BookOpen,
     route: "/readbuddy",
-    gradient: "from-orange-400 to-orange-600",
+    gradient: "from-orange-400/20 to-yellow-400/20",
+    iconBg: "bg-orange-500",
   },
 ];
 
@@ -42,12 +50,12 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen gradient-pastel p-4 md:p-8">
+    <div className="min-h-screen gradient-soft-blue p-6">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.5 }}
           className="text-center mb-12"
         >
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
@@ -62,27 +70,45 @@ const Dashboard = () => {
           {buddyModes.map((mode, index) => (
             <motion.div
               key={mode.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1, duration: 0.6 }}
-              whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.4, delay: index * 0.1 }}
+              whileHover={{ scale: 1.05, y: -8 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => navigate(mode.route)}
               className="cursor-pointer"
             >
-              <Card className="h-full shadow-soft hover:shadow-gentle transition-all border-border/50">
+              <Card className={`shadow-gentle hover:shadow-xl transition-all duration-300 bg-gradient-to-br ${mode.gradient} border-2 hover:border-primary/50 h-full`}>
                 <CardHeader>
-                  <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${mode.gradient} flex items-center justify-center mb-4`}>
-                    <mode.icon className="w-8 h-8 text-white" />
+                  <div className="flex items-start gap-4">
+                    <motion.div
+                      whileHover={{ rotate: 10, scale: 1.1 }}
+                      transition={{ duration: 0.3 }}
+                      className={`p-4 rounded-2xl ${mode.iconBg}`}
+                    >
+                      <mode.icon className="w-8 h-8 text-white" />
+                    </motion.div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CardTitle className="text-2xl">{mode.title}</CardTitle>
+                        <span className="text-2xl">{mode.emoji}</span>
+                      </div>
+                      <CardDescription className="text-base">
+                        {mode.description}
+                      </CardDescription>
+                    </div>
                   </div>
-                  <CardTitle className="text-2xl">{mode.title}</CardTitle>
-                  <CardDescription className="text-base">
-                    {mode.description}
-                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-sm text-muted-foreground">
-                    Click to start practicing →
+                  <div className="flex items-center text-sm text-primary font-medium">
+                    Click to start practicing
+                    <motion.span
+                      animate={{ x: [0, 5, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                      className="ml-2"
+                    >
+                      →
+                    </motion.span>
                   </div>
                 </CardContent>
               </Card>
