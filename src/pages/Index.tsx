@@ -70,15 +70,6 @@ const Index = () => {
           />
         </div>
 
-        {/* Footer */}
-        <footer
-          className={`text-sm text-muted-foreground transition-smooth ${
-            isLoaded ? "animate-fade-in-up opacity-100" : "opacity-0"
-          }`}
-          style={{ animationDelay: "0.9s", animationFillMode: "backwards" }}
-        >
-          Powered by AI to make learning lovable ❤️
-        </footer>
       </main>
     </div>
   );
