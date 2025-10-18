@@ -1,1 +1,4 @@
 project_id = "oufatfjbdjezsfvvjhcp"
+
+[functions.talk-buddy-chat]
+verify_jwt = false
