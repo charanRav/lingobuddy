@@ -2,3 +2,6 @@ project_id = "oufatfjbdjezsfvvjhcp"
 
 [functions.talk-buddy-chat]
 verify_jwt = false
+
+[functions.listen-buddy-generate]
+verify_jwt = false
