@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { User, ArrowLeft, MessageCircle, Mic, Headphones, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Session {
   id: string;
@@ -20,11 +21,35 @@ const Profile = () => {
   const [sessions, setSessions] = useState<Session[]>([]);
 
   useEffect(() => {
-    // Load saved sessions from localStorage
-    const savedSessions = localStorage.getItem("buddySessions");
-    if (savedSessions) {
-      setSessions(JSON.parse(savedSessions));
-    }
+    const loadSessions = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from("sessions")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      if (error) {
+        console.error("Error loading sessions:", error);
+        return;
+      }
+
+      const formattedSessions: Session[] = data.map(session => ({
+        id: session.id,
+        type: session.buddy_type as "chat" | "talk" | "listen" | "read",
+        date: session.created_at,
+        duration: session.ended_at 
+          ? `${Math.round((new Date(session.ended_at).getTime() - new Date(session.started_at).getTime()) / 60000)} min`
+          : undefined
+      }));
+
+      setSessions(formattedSessions);
+    };
+
+    loadSessions();
   }, []);
 
   const getSessionIcon = (type: string) => {

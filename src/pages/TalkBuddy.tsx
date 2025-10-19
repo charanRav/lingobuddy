@@ -19,6 +19,7 @@ const TalkBuddy = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [timeRemaining, setTimeRemaining] = useState(30 * 60); // 30 minutes in seconds
   const [sessionActive, setSessionActive] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
   const timerRef = useRef<number | null>(null);
 
@@ -167,7 +168,29 @@ const TalkBuddy = () => {
     }
   };
 
-  const startSession = () => {
+  const startSession = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to start a session",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("sessions")
+      .insert({ user_id: user.id, buddy_type: "talk" })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error creating session:", error);
+      return;
+    }
+
+    setSessionId(data.id);
     setSessionActive(true);
     setMessages([]);
     setTimeRemaining(30 * 60);
@@ -178,9 +201,18 @@ const TalkBuddy = () => {
     });
   };
 
-  const endSession = () => {
+  const endSession = async () => {
+    if (sessionId) {
+      await supabase
+        .from("sessions")
+        .update({ ended_at: new Date().toISOString() })
+        .eq("id", sessionId);
+    }
+
     setSessionActive(false);
     setIsListening(false);
+    setSessionId(null);
+    
     if (recognitionRef.current) {
       recognitionRef.current.stop();
     }
