@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageCircle, Mic, Headphones, BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MessageCircle, Mic, Headphones, BookOpen, Settings, User } from "lucide-react";
 
 const buddyModes = [
   {
@@ -52,6 +53,31 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen gradient-soft-blue p-6">
       <div className="max-w-6xl mx-auto">
+        {/* Header with navigation buttons */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="flex justify-end gap-3 mb-6"
+        >
+          <Button
+            variant="outline"
+            onClick={() => navigate("/profile")}
+            className="gap-2"
+          >
+            <User className="w-4 h-4" />
+            Profile
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/settings")}
+            className="gap-2"
+          >
+            <Settings className="w-4 h-4" />
+            Settings
+          </Button>
+        </motion.div>
+
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
