@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,17 @@ import { supabase } from "@/integrations/supabase/client";
 const ReadBuddy = () => {
   const navigate = useNavigate();
   const [topic, setTopic] = useState("");
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/auth');
+        return;
+      }
+    };
+    checkAuth();
+  }, [navigate]);
   const [content, setContent] = useState("");
   const [difficultWords, setDifficultWords] = useState<string[]>([]);
   const [highlightDifficult, setHighlightDifficult] = useState(false);

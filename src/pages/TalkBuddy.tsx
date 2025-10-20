@@ -17,6 +17,17 @@ const TalkBuddy = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isListening, setIsListening] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/auth');
+        return;
+      }
+    };
+    checkAuth();
+  }, [navigate]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [timeRemaining, setTimeRemaining] = useState(30 * 60); // 30 minutes in seconds

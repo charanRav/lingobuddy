@@ -14,6 +14,17 @@ import { supabase } from "@/integrations/supabase/client";
 const ListenBuddy = () => {
   const navigate = useNavigate();
   const [topic, setTopic] = useState("");
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/auth');
+        return;
+      }
+    };
+    checkAuth();
+  }, [navigate]);
   const [mode, setMode] = useState<"chat" | "voice">("chat");
   const [conversation, setConversation] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
