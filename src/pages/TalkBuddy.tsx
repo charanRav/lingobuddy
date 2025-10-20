@@ -233,7 +233,7 @@ const TalkBuddy = () => {
   };
 
   return (
-    <div className="min-h-screen gradient-soft-blue p-6">
+    <div className="min-h-screen gradient-soft-blue p-4 sm:p-6">
       <div className="max-w-4xl mx-auto">
         {/* Header with Timer */}
         <motion.div

@@ -24,13 +24,36 @@ const Splash = () => {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="text-center"
       >
-        <motion.img
-          src={logo}
-          alt="LingoBuddy"
-          className="w-32 h-32 mx-auto mb-6 rounded-3xl shadow-gentle"
-          animate={isLoading ? { y: [0, -10, 0] } : {}}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-        />
+        <motion.div className="relative">
+          <motion.img
+            src={logo}
+            alt="LingoBuddy"
+            className="w-32 h-32 mx-auto mb-6 rounded-3xl shadow-gentle"
+            animate={isLoading ? { 
+              y: [0, -15, 0],
+              rotate: [0, 5, -5, 0],
+              scale: [1, 1.05, 1]
+            } : {}}
+            transition={{ 
+              duration: 2, 
+              repeat: Infinity, 
+              ease: "easeInOut",
+              times: [0, 0.5, 1]
+            }}
+          />
+          <motion.div
+            className="absolute inset-0 rounded-3xl bg-primary/20 blur-xl"
+            animate={isLoading ? { 
+              opacity: [0.3, 0.6, 0.3],
+              scale: [0.9, 1.1, 0.9]
+            } : {}}
+            transition={{ 
+              duration: 2, 
+              repeat: Infinity, 
+              ease: "easeInOut" 
+            }}
+          />
+        </motion.div>
         
         <motion.h1
           initial={{ opacity: 0, y: 20 }}

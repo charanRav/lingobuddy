@@ -51,30 +51,32 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen gradient-soft-blue p-6">
+    <div className="min-h-screen gradient-soft-blue p-4 sm:p-6 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header with navigation buttons */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="flex justify-end gap-3 mb-6"
+          className="flex justify-end gap-2 sm:gap-3 mb-6"
         >
           <Button
             variant="outline"
             onClick={() => navigate("/profile")}
-            className="gap-2"
+            className="gap-2 text-sm sm:text-base"
+            size="sm"
           >
             <User className="w-4 h-4" />
-            Profile
+            <span className="hidden sm:inline">Profile</span>
           </Button>
           <Button
             variant="outline"
             onClick={() => navigate("/settings")}
-            className="gap-2"
+            className="gap-2 text-sm sm:text-base"
+            size="sm"
           >
             <Settings className="w-4 h-4" />
-            Settings
+            <span className="hidden sm:inline">Settings</span>
           </Button>
         </motion.div>
 
@@ -82,17 +84,17 @@ const Dashboard = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-12"
+          className="text-center mb-8 sm:mb-12"
         >
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-3 sm:mb-4 px-4">
             Choose Your Buddy Mode
           </h1>
-          <p className="text-muted-foreground text-lg">
+          <p className="text-muted-foreground text-base sm:text-lg px-4">
             Select how you'd like to practice English today
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           {buddyModes.map((mode, index) => (
             <motion.div
               key={mode.id}

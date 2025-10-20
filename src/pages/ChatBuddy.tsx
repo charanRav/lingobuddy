@@ -170,8 +170,8 @@ const ChatBuddy = () => {
   };
 
   return (
-    <div className="min-h-screen gradient-pastel p-4 md:p-8">
-      <div className="max-w-4xl mx-auto h-[calc(100vh-4rem)] flex flex-col">
+    <div className="min-h-screen gradient-pastel p-4 sm:p-6 md:p-8">
+      <div className="max-w-4xl mx-auto h-[calc(100vh-2rem)] sm:h-[calc(100vh-3rem)] md:h-[calc(100vh-4rem)] flex flex-col">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

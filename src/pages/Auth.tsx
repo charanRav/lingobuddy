@@ -108,20 +108,26 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen gradient-pastel flex items-center justify-center p-4">
+    <div className="min-h-screen gradient-pastel flex items-center justify-center p-4 sm:p-6 md:p-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
         className="w-full max-w-md"
       >
-        <div className="text-center mb-8">
-          <img src={logo} alt="LingoBuddy" className="w-20 h-20 mx-auto mb-4 rounded-2xl shadow-soft" />
-          <h1 className="text-3xl font-bold text-foreground mb-2">Welcome to LingoBuddy</h1>
-          <p className="text-muted-foreground">Your journey to English mastery begins here</p>
+        <div className="text-center mb-6 sm:mb-8">
+          <motion.img 
+            src={logo} 
+            alt="LingoBuddy" 
+            className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4 rounded-2xl shadow-soft"
+            whileHover={{ scale: 1.05, rotate: 5 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          />
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Welcome to LingoBuddy</h1>
+          <p className="text-sm sm:text-base text-muted-foreground px-4">Your journey to English mastery begins here</p>
         </div>
 
-        <Card className="shadow-gentle border-border/50">
+        <Card className="shadow-gentle border-border/50 mx-2 sm:mx-0">
           <CardHeader>
             <CardTitle>Get Started</CardTitle>
             <CardDescription>Sign in or create a new account</CardDescription>
