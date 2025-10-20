@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mic, MicOff, Volume2 } from "lucide-react";
+import { Mic, MicOff, Volume2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
@@ -14,6 +15,7 @@ interface Message {
 
 const TalkBuddy = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -135,7 +137,19 @@ const TalkBuddy = () => {
       setIsSpeaking(true);
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'en-US';
-      utterance.rate = 0.9;
+      utterance.rate = 0.95;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+      
+      // Try to use a more natural voice
+      const voices = window.speechSynthesis.getVoices();
+      const preferredVoice = voices.find(voice => 
+        voice.lang.includes('en') && (voice.name.includes('Natural') || voice.name.includes('Premium'))
+      ) || voices.find(voice => voice.lang.includes('en-US'));
+      
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
+      }
       
       utterance.onend = () => {
         setIsSpeaking(false);
@@ -235,6 +249,15 @@ const TalkBuddy = () => {
   return (
     <div className="min-h-screen gradient-soft-blue p-4 sm:p-6">
       <div className="max-w-4xl mx-auto">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/dashboard")}
+          className="mb-4"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Dashboard
+        </Button>
+
         {/* Header with Timer */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
