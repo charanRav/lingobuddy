@@ -3,20 +3,36 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Headphones, Play, Pause, Volume2 } from "lucide-react";
+import { Headphones, Play, Pause, Volume2, ArrowLeft, Mic, MicOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 const ListenBuddy = () => {
+  const navigate = useNavigate();
   const [topic, setTopic] = useState("");
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/auth');
+        return;
+      }
+    };
+    checkAuth();
+  }, [navigate]);
   const [mode, setMode] = useState<"chat" | "voice">("chat");
   const [conversation, setConversation] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentWordIndex, setCurrentWordIndex] = useState(-1);
   const [words, setWords] = useState<string[]>([]);
+  const [userResponse, setUserResponse] = useState("");
+  const [isListening, setIsListening] = useState(false);
   const { toast } = useToast();
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
@@ -120,9 +136,106 @@ const ListenBuddy = () => {
     setCurrentWordIndex(-1);
   };
 
+  const toggleListening = () => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setUserResponse(transcript);
+        setIsListening(false);
+      };
+
+      recognition.onerror = () => {
+        setIsListening(false);
+        toast({
+          title: "Error",
+          description: "Could not recognize speech. Please try again.",
+          variant: "destructive",
+        });
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      if (isListening) {
+        recognition.stop();
+        setIsListening(false);
+      } else {
+        recognition.start();
+        setIsListening(true);
+      }
+    } else {
+      toast({
+        title: "Not supported",
+        description: "Speech recognition is not supported in this browser.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUserSubmit = async () => {
+    if (!userResponse.trim()) return;
+    
+    const updatedConversation = conversation + `\n\nYou: ${userResponse}`;
+    setConversation(updatedConversation);
+    setIsGenerating(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('listen-buddy-generate', {
+        body: { 
+          topic: `Continue this conversation: ${updatedConversation}. Respond naturally as the AI speaker.`,
+          mode 
+        }
+      });
+
+      if (error) throw error;
+
+      const aiResponse = `\n\nAI: ${data.conversation}`;
+      const finalConversation = updatedConversation + aiResponse;
+      setConversation(finalConversation);
+      setWords(finalConversation.split(/\s+/));
+      setUserResponse("");
+      
+      if (mode === "voice") {
+        const utterance = new SpeechSynthesisUtterance(data.conversation);
+        utterance.rate = 0.9;
+        speechSynthesis.speak(utterance);
+      }
+
+      toast({
+        title: "Response received",
+        description: "AI has responded to your message",
+      });
+    } catch (error) {
+      console.error("Error generating response:", error);
+      toast({
+        title: "Error",
+        description: "Failed to generate AI response.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <div className="min-h-screen gradient-pastel p-4 sm:p-6 md:p-8">
       <div className="max-w-4xl mx-auto space-y-6">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/dashboard")}
+          className="mb-4"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Dashboard
+        </Button>
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -212,42 +325,82 @@ const ListenBuddy = () => {
         {/* Transcript Display */}
         <AnimatePresence>
           {conversation && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4 }}
-            >
-              <Card className="shadow-gentle">
-                <CardHeader>
-                  <CardTitle className="text-xl">Transcript</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="prose prose-sm max-w-none">
-                    {mode === "voice" ? (
-                      <p className="leading-relaxed text-base whitespace-pre-wrap">
-                        {words.map((word, index) => (
-                          <span
-                            key={index}
-                            className={`transition-colors duration-200 ${
-                              index === currentWordIndex
-                                ? "bg-primary/20 font-semibold"
-                                : ""
-                            }`}
-                          >
-                            {word}{" "}
-                          </span>
-                        ))}
-                      </p>
-                    ) : (
-                      <p className="leading-relaxed text-base whitespace-pre-wrap">
-                        {conversation}
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
+            <>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.4 }}
+              >
+                <Card className="shadow-gentle">
+                  <CardHeader>
+                    <CardTitle className="text-xl">Conversation</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="prose prose-sm max-w-none max-h-96 overflow-y-auto">
+                      {mode === "voice" ? (
+                        <p className="leading-relaxed text-base whitespace-pre-wrap">
+                          {words.map((word, index) => (
+                            <span
+                              key={index}
+                              className={`transition-colors duration-200 ${
+                                index === currentWordIndex
+                                  ? "bg-primary/20 font-semibold"
+                                  : ""
+                              }`}
+                            >
+                              {word}{" "}
+                            </span>
+                          ))}
+                        </p>
+                      ) : (
+                        <p className="leading-relaxed text-base whitespace-pre-wrap">
+                          {conversation}
+                        </p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+              >
+                <Card className="shadow-gentle">
+                  <CardHeader>
+                    <CardTitle className="text-xl">Your Turn to Speak</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex gap-2">
+                      <Textarea
+                        placeholder="Type your response or use voice input..."
+                        value={userResponse}
+                        onChange={(e) => setUserResponse(e.target.value)}
+                        className="flex-1"
+                        rows={3}
+                      />
+                      <Button
+                        variant={isListening ? "destructive" : "outline"}
+                        size="icon"
+                        onClick={toggleListening}
+                        disabled={isPlaying || isGenerating}
+                      >
+                        {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                    <Button 
+                      onClick={handleUserSubmit} 
+                      disabled={isGenerating || !userResponse.trim() || isPlaying}
+                      className="w-full"
+                    >
+                      {isGenerating ? "Generating AI Response..." : "Send Response"}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
       </div>

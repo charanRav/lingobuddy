@@ -44,9 +44,15 @@ const Auth = () => {
     });
 
     if (error) {
+      let message = "Unable to sign in. Please try again.";
+      if (error.message.includes("Invalid login")) {
+        message = "Invalid email or password.";
+      } else if (error.message.includes("Email not confirmed")) {
+        message = "Please confirm your email address.";
+      }
       toast({
         title: "Error signing in",
-        description: error.message,
+        description: message,
         variant: "destructive",
       });
     } else {
@@ -72,9 +78,15 @@ const Auth = () => {
     });
 
     if (error) {
+      let message = "Unable to create account. Please try again.";
+      if (error.message.includes("already registered")) {
+        message = "This email is already registered. Please sign in.";
+      } else if (error.message.includes("Password")) {
+        message = "Password must be at least 6 characters.";
+      }
       toast({
         title: "Error signing up",
-        description: error.message,
+        description: message,
         variant: "destructive",
       });
     } else {
@@ -100,7 +112,7 @@ const Auth = () => {
     if (error) {
       toast({
         title: "Error signing in with Google",
-        description: error.message,
+        description: "Unable to sign in with Google. Please try again.",
         variant: "destructive",
       });
       setLoading(false);
