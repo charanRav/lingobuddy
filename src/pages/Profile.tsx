@@ -2,13 +2,10 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { User, ArrowLeft, MessageCircle, Mic, Headphones, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
 interface Session {
   id: string;
@@ -19,24 +16,14 @@ interface Session {
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [userName, setUserName] = useState("");
-  const [userEmail, setUserEmail] = useState("");
+  const [userName] = useState("English Learner");
+  const [userEmail] = useState("learner@lingobuddy.com");
   const [sessions, setSessions] = useState<Session[]>([]);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editName, setEditName] = useState("");
 
   useEffect(() => {
-    const loadUserData = async () => {
+    const loadSessions = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate("/auth");
-        return;
-      }
-
-      setUserEmail(user.email || "");
-      setUserName(user.user_metadata?.full_name || user.email?.split('@')[0] || "User");
-      setEditName(user.user_metadata?.full_name || user.email?.split('@')[0] || "");
+      if (!user) return;
 
       const { data, error } = await supabase
         .from("sessions")
@@ -62,35 +49,8 @@ const Profile = () => {
       setSessions(formattedSessions);
     };
 
-    loadUserData();
-  }, [navigate]);
-
-  const handleSaveProfile = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { error } = await supabase.auth.updateUser({
-        data: { full_name: editName }
-      });
-
-      if (error) throw error;
-
-      setUserName(editName);
-      setIsEditing(false);
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully",
-      });
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update profile",
-        variant: "destructive",
-      });
-    }
-  };
+    loadSessions();
+  }, []);
 
   const getSessionIcon = (type: string) => {
     switch (type) {
@@ -145,40 +105,13 @@ const Profile = () => {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {isEditing ? (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
-                    <Input
-                      id="name"
-                      value={editName}
-                      onChange={(e) => setEditName(e.target.value)}
-                      placeholder="Enter your name"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={handleSaveProfile} className="flex-1">
-                      Save Changes
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => {
-                        setIsEditing(false);
-                        setEditName(userName);
-                      }}
-                      className="flex-1"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <Button variant="outline" onClick={() => setIsEditing(true)} className="w-full">
+            <CardContent>
+              <div className="flex gap-4">
+                <Button variant="outline" className="flex-1">
                   <User className="w-4 h-4 mr-2" />
                   Edit Profile
                 </Button>
-              )}
+              </div>
             </CardContent>
           </Card>
 

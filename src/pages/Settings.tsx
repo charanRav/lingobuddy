@@ -8,7 +8,6 @@ import { Settings as SettingsIcon, Moon, Sun, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -23,15 +22,7 @@ const Settings = () => {
 
   useEffect(() => {
     setMounted(true);
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate('/auth');
-        return;
-      }
-    };
-    checkAuth();
-  }, [navigate]);
+  }, []);
 
   const handlePersonalityChange = (value: string) => {
     setPersonalityTone(value);

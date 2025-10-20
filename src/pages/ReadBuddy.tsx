@@ -1,29 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { BookOpen, Volume2, ArrowLeft } from "lucide-react";
+import { BookOpen, Volume2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 const ReadBuddy = () => {
-  const navigate = useNavigate();
   const [topic, setTopic] = useState("");
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate('/auth');
-        return;
-      }
-    };
-    checkAuth();
-  }, [navigate]);
   const [content, setContent] = useState("");
   const [difficultWords, setDifficultWords] = useState<string[]>([]);
   const [highlightDifficult, setHighlightDifficult] = useState(false);
@@ -107,15 +94,6 @@ const ReadBuddy = () => {
   return (
     <div className="min-h-screen gradient-pastel p-4 sm:p-6 md:p-8">
       <div className="max-w-4xl mx-auto space-y-6">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/dashboard")}
-          className="mb-4"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </Button>
-
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

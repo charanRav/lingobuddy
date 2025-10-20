@@ -80,6 +80,7 @@ const ChatBuddy = () => {
     await saveMessage("user", input);
 
     const personality = localStorage.getItem("buddyPersonality") || "friendly";
+    const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-buddy`;
 
     let assistantContent = "";
     const updateAssistant = (chunk: string) => {
@@ -96,70 +97,30 @@ const ChatBuddy = () => {
     };
 
     try {
-      const { data, error } = await supabase.functions.invoke('chat-buddy', {
-        body: { 
-          messages: [...messages, userMessage], 
-          sessionId 
-        },
+      const resp = await fetch(CHAT_URL, {
+        method: "POST",
         headers: {
+          "Content-Type": "application/json",
           "x-buddy-personality": personality,
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
+        body: JSON.stringify({ messages: [...messages, userMessage], sessionId }),
       });
 
-      if (error) {
-        if (error.message?.includes("429") || error.message?.includes("rate limit")) {
-          toast({
-            title: "Error",
-            description: "Rate limits exceeded, please try again later.",
-            variant: "destructive",
-          });
-        } else if (error.message?.includes("402") || error.message?.includes("payment")) {
-          toast({
-            title: "Error",
-            description: "Payment required, please add funds to your Lovable AI workspace.",
-            variant: "destructive",
-          });
-        } else {
-          throw error;
-        }
-        setIsLoading(false);
-        return;
-      }
-
-      // For streaming responses, we need to handle the raw fetch
-      // since supabase.functions.invoke doesn't support streaming well
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-buddy`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            'x-buddy-personality': personality,
-          },
-          body: JSON.stringify({
-            messages: [...messages, userMessage],
-            sessionId,
-          }),
-        }
-      );
-
-      if (response.status === 429 || response.status === 402) {
-        const errorData = await response.json();
+      if (resp.status === 429 || resp.status === 402) {
+        const error = await resp.json();
         toast({
           title: "Error",
-          description: errorData.error || "Request failed",
+          description: error.error,
           variant: "destructive",
         });
         setIsLoading(false);
         return;
       }
 
-      if (!response.ok || !response.body) {
-        throw new Error(`Failed to start stream: ${response.statusText}`);
-      }
+      if (!resp.ok || !resp.body) throw new Error("Failed to start stream");
 
-      const reader = response.body.getReader();
+      const reader = resp.body.getReader();
       const decoder = new TextDecoder();
       let textBuffer = "";
       let streamDone = false;
@@ -195,18 +156,14 @@ const ChatBuddy = () => {
         }
       }
 
-      if (assistantContent) {
-        await saveMessage("assistant", assistantContent);
-      }
+      await saveMessage("assistant", assistantContent);
     } catch (error) {
-      console.error("Chat error:", error);
+      console.error(error);
       toast({
         title: "Error",
         description: "Failed to send message. Please try again.",
         variant: "destructive",
       });
-      // Remove the last user message if the request failed
-      setMessages((prev) => prev.slice(0, -1));
     } finally {
       setIsLoading(false);
     }

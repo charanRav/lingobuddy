@@ -1,18 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-const requestSchema = z.object({
-  messages: z.array(z.object({
-    role: z.enum(['user', 'assistant', 'system']),
-    content: z.string().min(1).max(4000)
-  })).min(1).max(50),
-  sessionId: z.string().uuid().optional()
-});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -20,18 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const body = await req.json();
-    
-    // Validate input
-    const validation = requestSchema.safeParse(body);
-    if (!validation.success) {
-      return new Response(
-        JSON.stringify({ error: "Invalid input format" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-    
-    const { messages, sessionId } = validation.data;
+    const { messages, sessionId } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
@@ -103,7 +83,7 @@ serve(async (req) => {
   } catch (error) {
     console.error("chat-buddy error:", error);
     return new Response(
-      JSON.stringify({ error: "An error occurred processing your request. Please try again." }),
+      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

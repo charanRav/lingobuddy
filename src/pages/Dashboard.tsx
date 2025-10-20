@@ -1,10 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Mic, Headphones, BookOpen, Settings, User } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 const buddyModes = [
   {
@@ -51,17 +49,6 @@ const buddyModes = [
 
 const Dashboard = () => {
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate('/auth');
-        return;
-      }
-    };
-    checkAuth();
-  }, [navigate]);
 
   return (
     <div className="min-h-screen gradient-soft-blue p-4 sm:p-6 md:p-8">
