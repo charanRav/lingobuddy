@@ -96,6 +96,19 @@ const ChatBuddy = () => {
     };
 
     try {
+      const { data, error } = await supabase.functions.invoke('chat-buddy', {
+        body: {
+          messages: [...messages, userMessage],
+          sessionId,
+        },
+        headers: {
+          'x-buddy-personality': personality,
+        },
+      });
+
+      if (error) throw error;
+
+      // Handle streaming response
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-buddy`,
         {

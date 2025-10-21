@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { User, ArrowLeft, MessageCircle, Mic, Headphones, BookOpen } from "lucide-react";
+import { User, ArrowLeft, MessageCircle, Mic, Headphones, BookOpen, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -92,6 +92,26 @@ const Profile = () => {
     }
   };
 
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out",
+      });
+      navigate("/auth");
+    } catch (error) {
+      console.error("Error logging out:", error);
+      toast({
+        title: "Error",
+        description: "Failed to log out",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getSessionIcon = (type: string) => {
     switch (type) {
       case "chat":
@@ -174,10 +194,16 @@ const Profile = () => {
                   </div>
                 </div>
               ) : (
-                <Button variant="outline" onClick={() => setIsEditing(true)} className="w-full">
-                  <User className="w-4 h-4 mr-2" />
-                  Edit Profile
-                </Button>
+                <div className="space-y-2">
+                  <Button variant="outline" onClick={() => setIsEditing(true)} className="w-full">
+                    <User className="w-4 h-4 mr-2" />
+                    Edit Profile
+                  </Button>
+                  <Button variant="destructive" onClick={handleLogout} className="w-full">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>
