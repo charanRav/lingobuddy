@@ -96,38 +96,6 @@ const ChatBuddy = () => {
     };
 
     try {
-      const { data, error } = await supabase.functions.invoke('chat-buddy', {
-        body: { 
-          messages: [...messages, userMessage], 
-          sessionId 
-        },
-        headers: {
-          "x-buddy-personality": personality,
-        },
-      });
-
-      if (error) {
-        if (error.message?.includes("429") || error.message?.includes("rate limit")) {
-          toast({
-            title: "Error",
-            description: "Rate limits exceeded, please try again later.",
-            variant: "destructive",
-          });
-        } else if (error.message?.includes("402") || error.message?.includes("payment")) {
-          toast({
-            title: "Error",
-            description: "Payment required, please add funds to your Lovable AI workspace.",
-            variant: "destructive",
-          });
-        } else {
-          throw error;
-        }
-        setIsLoading(false);
-        return;
-      }
-
-      // For streaming responses, we need to handle the raw fetch
-      // since supabase.functions.invoke doesn't support streaming well
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-buddy`,
         {
