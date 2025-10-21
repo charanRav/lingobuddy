@@ -14,7 +14,9 @@ import ListenBuddy from "./pages/ListenBuddy";
 import ReadBuddy from "./pages/ReadBuddy";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
+import HealthCheck from "./pages/HealthCheck";
 import NotFound from "./pages/NotFound";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -28,14 +30,15 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Splash />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/story" element={<Story />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/chatbuddy" element={<ChatBuddy />} />
-            <Route path="/talkbuddy" element={<TalkBuddy />} />
-            <Route path="/listenbuddy" element={<ListenBuddy />} />
-            <Route path="/readbuddy" element={<ReadBuddy />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/story" element={<ProtectedRoute><Story /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/chatbuddy" element={<ProtectedRoute><ChatBuddy /></ProtectedRoute>} />
+            <Route path="/talkbuddy" element={<ProtectedRoute><TalkBuddy /></ProtectedRoute>} />
+            <Route path="/listenbuddy" element={<ProtectedRoute><ListenBuddy /></ProtectedRoute>} />
+            <Route path="/readbuddy" element={<ProtectedRoute><ReadBuddy /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/health" element={<ProtectedRoute><HealthCheck /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
