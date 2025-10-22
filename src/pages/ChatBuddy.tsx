@@ -84,14 +84,16 @@ const ChatBuddy = () => {
     const personality = localStorage.getItem("buddyPersonality") || "friendly";
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-buddy`,
+        'https://oufatfjbdjezsfvvjhcp.supabase.co/functions/v1/chat-buddy',
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            'apikey': `${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            'Authorization': `Bearer ${session?.access_token}`,
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91ZmF0ZmpiZGplenNmdnZqaGNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3NzA4MDEsImV4cCI6MjA3NjM0NjgwMX0.fVugpzUQoUd9foFBM4WMMOpqSzK_2yLV54YEP-k97LI',
             'x-buddy-personality': personality,
           },
           body: JSON.stringify({
