@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronRight } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const stories = [
   {
@@ -28,10 +29,29 @@ const Story = () => {
   const navigate = useNavigate();
   const [currentStory, setCurrentStory] = useState(0);
 
-  const handleNext = () => {
+  useEffect(() => {
+    const checkStoryStatus = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user?.user_metadata?.has_seen_story) {
+        navigate("/dashboard");
+      }
+    };
+    
+    checkStoryStatus();
+  }, [navigate]);
+
+  const handleNext = async () => {
     if (currentStory < stories.length - 1) {
       setCurrentStory(currentStory + 1);
     } else {
+      // Mark story as seen
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.auth.updateUser({
+          data: { has_seen_story: true }
+        });
+      }
       navigate("/dashboard");
     }
   };

@@ -73,42 +73,17 @@ const ChatBuddy = () => {
     if (!input.trim() || isLoading) return;
 
     const userMessage: Message = { role: "user", content: input };
+    const userInput = input;
+    
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
 
-    await saveMessage("user", input);
+    await saveMessage("user", userInput);
 
     const personality = localStorage.getItem("buddyPersonality") || "friendly";
 
-    let assistantContent = "";
-    const updateAssistant = (chunk: string) => {
-      assistantContent += chunk;
-      setMessages((prev) => {
-        const last = prev[prev.length - 1];
-        if (last?.role === "assistant") {
-          return prev.map((m, i) =>
-            i === prev.length - 1 ? { ...m, content: assistantContent } : m
-          );
-        }
-        return [...prev, { role: "assistant", content: assistantContent }];
-      });
-    };
-
     try {
-      const { data, error } = await supabase.functions.invoke('chat-buddy', {
-        body: {
-          messages: [...messages, userMessage],
-          sessionId,
-        },
-        headers: {
-          'x-buddy-personality': personality,
-        },
-      });
-
-      if (error) throw error;
-
-      // Handle streaming response
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-buddy`,
         {
@@ -116,6 +91,7 @@ const ChatBuddy = () => {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            'apikey': `${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
             'x-buddy-personality': personality,
           },
           body: JSON.stringify({
@@ -132,22 +108,26 @@ const ChatBuddy = () => {
           description: errorData.error || "Request failed",
           variant: "destructive",
         });
+        setMessages((prev) => prev.slice(0, -1));
         setIsLoading(false);
         return;
       }
 
       if (!response.ok || !response.body) {
+        const errorText = await response.text();
+        console.error("Response error:", response.status, errorText);
         throw new Error(`Failed to start stream: ${response.statusText}`);
       }
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let textBuffer = "";
-      let streamDone = false;
+      let assistantContent = "";
 
-      while (!streamDone) {
+      while (true) {
         const { done, value } = await reader.read();
         if (done) break;
+        
         textBuffer += decoder.decode(value, { stream: true });
 
         let newlineIndex: number;
@@ -160,18 +140,25 @@ const ChatBuddy = () => {
           if (!line.startsWith("data: ")) continue;
 
           const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") {
-            streamDone = true;
-            break;
-          }
+          if (jsonStr === "[DONE]") break;
 
           try {
             const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) updateAssistant(content);
-          } catch {
-            textBuffer = line + "\n" + textBuffer;
-            break;
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              assistantContent += content;
+              setMessages((prev) => {
+                const last = prev[prev.length - 1];
+                if (last?.role === "assistant") {
+                  return prev.map((m, i) =>
+                    i === prev.length - 1 ? { ...m, content: assistantContent } : m
+                  );
+                }
+                return [...prev, { role: "assistant", content: assistantContent }];
+              });
+            }
+          } catch (e) {
+            console.error("Parse error:", e);
           }
         }
       }
@@ -186,7 +173,6 @@ const ChatBuddy = () => {
         description: "Failed to send message. Please try again.",
         variant: "destructive",
       });
-      // Remove the last user message if the request failed
       setMessages((prev) => prev.slice(0, -1));
     } finally {
       setIsLoading(false);
