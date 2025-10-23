@@ -35,18 +35,23 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    const systemPrompt = `You are generating an engaging English conversation or debate on the given topic. 
-Create a natural dialogue between two people (Speaker A and Speaker B) discussing the topic.
-The conversation should:
-- Be educational and interesting
-- Use varied vocabulary and grammar structures
-- Last about 2-3 minutes when read aloud
-- Include different perspectives or viewpoints
-- Use natural conversational English
+    const systemPrompt = `You are LingoBuddy's conversation generator. Create natural, engaging English conversations.
+
+${mode === 'voice' ? 'Generate a spoken conversation that flows naturally when read aloud.' : 'Create a conversation that\'s clear and easy to follow.'}
+
+Important:
+- Keep language accessible for English learners
+- Make it interesting and relatable
+- Include different viewpoints for depth
+- Each turn should be 2-3 sentences maximum
+- Generate 6-8 conversation exchanges
+- Sound natural, like real people talking
+
+Topic: ${topic}
 
 Format each line as:
-Speaker A: [their dialogue]
-Speaker B: [their dialogue]`;
+Person A: [their message]
+Person B: [their message]`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

@@ -180,43 +180,54 @@ const ListenBuddy = () => {
   };
 
   const handleUserSubmit = async () => {
-    if (!userResponse.trim()) return;
-    
-    const updatedConversation = conversation + `\n\nYou: ${userResponse}`;
-    setConversation(updatedConversation);
+    if (!userResponse.trim()) {
+      toast({
+        title: "Empty response",
+        description: "Please type or speak your response",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const userResponseText = `\n\nYou: ${userResponse}`;
+    setConversation(prev => prev + userResponseText);
+    const currentInput = userResponse;
+    setUserResponse("");
     setIsGenerating(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('listen-buddy-generate', {
+      const { data, error } = await supabase.functions.invoke('listen-buddy-respond', {
         body: { 
-          topic: `Continue this conversation: ${updatedConversation}. Respond naturally as the AI speaker.`,
-          mode 
+          conversation: conversation,
+          userResponse: currentInput
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Function error:", error);
+        throw error;
+      }
 
-      const aiResponse = `\n\nAI: ${data.conversation}`;
-      const finalConversation = updatedConversation + aiResponse;
-      setConversation(finalConversation);
-      setWords(finalConversation.split(/\s+/));
-      setUserResponse("");
+      const aiResponse = data.response;
+      const buddyMessage = `\n\nBuddy: ${aiResponse}`;
+      setConversation(prev => prev + buddyMessage);
+      setWords((prev) => [...prev, ...aiResponse.split(/\s+/)]);
       
       if (mode === "voice") {
-        const utterance = new SpeechSynthesisUtterance(data.conversation);
+        const utterance = new SpeechSynthesisUtterance(aiResponse);
         utterance.rate = 0.9;
         speechSynthesis.speak(utterance);
       }
 
       toast({
         title: "Response received",
-        description: "AI has responded to your message",
+        description: "Buddy responded to your message",
       });
     } catch (error) {
       console.error("Error generating response:", error);
       toast({
         title: "Error",
-        description: "Failed to generate AI response.",
+        description: "Failed to generate response. Please try again.",
         variant: "destructive",
       });
     } finally {

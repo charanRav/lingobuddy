@@ -7,7 +7,8 @@ const corsHeaders = {
 };
 
 const requestSchema = z.object({
-  message: z.string().trim().min(1).max(2000)
+  conversation: z.string().min(1),
+  userResponse: z.string().min(1).max(2000),
 });
 
 serve(async (req) => {
@@ -18,38 +19,40 @@ serve(async (req) => {
   try {
     const body = await req.json();
     
-    // Validate input
     const validation = requestSchema.safeParse(body);
     if (!validation.success) {
+      console.error("Validation error:", validation.error);
       return new Response(
-        JSON.stringify({ error: "Invalid input format" }),
+        JSON.stringify({ error: "Invalid input" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
     
-    const { message } = validation.data;
+    const { conversation, userResponse } = validation.data;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    const systemPrompt = `You are LingoBuddy, a friendly English conversation partner. 
+    const systemPrompt = `You are LingoBuddy responding to a user practicing English listening comprehension.
 
-CORE PRINCIPLE: Never explicitly point out errors. Instead, naturally model correct usage in your responses.
+Previous conversation context:
+${conversation}
 
-How to help:
-1. Acknowledge their message warmly
-2. If you notice grammar/vocabulary issues, naturally use the correct form in your response
-3. Frame suggestions conversationally: "That's interesting! I'd say...", "Great point! Another way to put it is..."
-4. NEVER use words like: error, mistake, wrong, incorrect, should, must
+The user just responded: "${userResponse}"
 
-Example:
-User: "I goes to market yesterday"
-You: "Oh nice! I went to the market yesterday too. What did you buy?"
+Your job:
+1. Acknowledge their response warmly
+2. If you notice any grammar/vocabulary issues, naturally model correct usage in your reply (don't point out errors)
+3. Continue the conversation naturally based on their response
+4. Keep it concise (2-3 sentences)
+5. Frame any language improvements conversationally: "That's a good point! I might say..." or "Interesting! Another way to express that is..."
 
-Keep responses short (2-3 sentences), natural, and encouraging. Focus on conversation, not teaching.`;
+NEVER use words like: error, mistake, wrong, incorrect, should fix
+Be encouraging and keep the conversation flowing naturally.`;
 
+    console.log("Calling AI to respond to user input...");
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -60,7 +63,7 @@ Keep responses short (2-3 sentences), natural, and encouraging. Focus on convers
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: message },
+          { role: "user", content: userResponse },
         ],
       }),
     });
@@ -71,14 +74,14 @@ Keep responses short (2-3 sentences), natural, and encouraging. Focus on convers
       
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }),
+          JSON.stringify({ error: "Rate limit exceeded. Please try again shortly." }),
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
       
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: "AI credits depleted. Please add credits to continue." }),
+          JSON.stringify({ error: "AI credits needed. Please add credits to continue." }),
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -87,16 +90,17 @@ Keep responses short (2-3 sentences), natural, and encouraging. Focus on convers
     }
 
     const data = await response.json();
-    const aiMessage = data.choices[0]?.message?.content || "I didn't catch that. Could you try again?";
+    const aiResponse = data.choices[0]?.message?.content || "Thanks for sharing! Let's continue...";
 
+    console.log("Successfully generated AI response");
     return new Response(
-      JSON.stringify({ message: aiMessage }),
+      JSON.stringify({ response: aiResponse }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("Error in talk-buddy-chat:", error);
+    console.error("Error in listen-buddy-respond:", error);
     return new Response(
-      JSON.stringify({ error: "An error occurred processing your request. Please try again." }),
+      JSON.stringify({ error: "Failed to generate response. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

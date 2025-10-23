@@ -34,16 +34,19 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY is not configured');
     }
 
-    const systemPrompt = `You are an expert English content creator. Generate advanced English reading material on the given topic.
-The content should:
-- Be 300-400 words long
-- Use varied and sophisticated vocabulary
-- Include complex sentence structures
-- Be educational and engaging
-- Use proper grammar and punctuation
-- Be formatted in clear paragraphs
+    const systemPrompt = `You are LingoBuddy's reading content generator.
 
-Do not include a title - just the content paragraphs.`;
+Create engaging reading material on: "${topic}"
+
+Guidelines:
+- Write 3-4 well-structured paragraphs
+- Use intermediate to advanced English vocabulary
+- Include varied sentence structures for practice
+- Make it interesting, informative, and naturally flowing
+- Each paragraph should be 3-5 sentences
+- Use vocabulary that's challenging but accessible
+
+No title needed - just the content paragraphs.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

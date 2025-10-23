@@ -117,22 +117,16 @@ const TalkBuddy = () => {
       if (error) throw error;
 
       const aiResponse = data.message;
-      
-      // Extract correction if present
-      const correctionMatch = aiResponse.match(/\[Tip: (.*?)\]/);
-      const correction = correctionMatch ? correctionMatch[1] : undefined;
-      const cleanMessage = aiResponse.replace(/\[Tip: .*?\]/g, '').trim();
 
       const assistantMessage: Message = {
         role: "assistant",
-        content: cleanMessage,
-        correction,
+        content: aiResponse,
       };
 
       setMessages(prev => [...prev, assistantMessage]);
       
       // Speak the response
-      speakText(cleanMessage);
+      speakText(aiResponse);
     } catch (error) {
       console.error("Error getting AI response:", error);
       toast({
@@ -314,11 +308,6 @@ const TalkBuddy = () => {
                     >
                       <div className={`max-w-[80%] ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'} rounded-2xl px-4 py-3`}>
                         <p>{msg.content}</p>
-                        {msg.correction && (
-                          <p className="mt-2 text-sm opacity-80 border-t border-current/20 pt-2">
-                            💡 Tip: {msg.correction}
-                          </p>
-                        )}
                       </div>
                     </motion.div>
                   ))}
