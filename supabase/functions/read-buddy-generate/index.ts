@@ -100,7 +100,7 @@ No title needed - just the content paragraphs.`;
     });
   } catch (error) {
     console.error('Error in read-buddy-generate:', error);
-    return new Response(JSON.stringify({ error: "An error occurred generating the content. Please try again." }), {
+    return new Response(JSON.stringify({ error: "An error occurred. Please try again." }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

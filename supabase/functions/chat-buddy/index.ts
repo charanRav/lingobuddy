@@ -113,7 +113,7 @@ Keep main responses short (2-3 sentences), natural, and encouraging.`;
   } catch (error) {
     console.error("chat-buddy error:", error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error occurred" }),
+      JSON.stringify({ error: "An error occurred. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
