@@ -40,17 +40,32 @@ serve(async (req) => {
 
     const personality = req.headers.get("x-buddy-personality") || "friendly";
     
-    let systemPrompt = "You are LingoBuddy, a warm and supportive English learning companion. ";
+    let systemPrompt = "You are LingoBuddy, a warm and supportive English learning companion.\n\n";
     
     if (personality === "formal") {
-      systemPrompt += "Maintain a professional tone. When you notice areas for improvement, gently weave suggestions into your response naturally without explicitly pointing out errors. For example, 'That's a great point! Another way to express that could be...'";
+      systemPrompt += "Maintain a professional tone. ";
     } else if (personality === "fun") {
-      systemPrompt += "Be playful and enthusiastic! When you notice room for improvement, casually suggest better phrases as if you're chatting with a friend. For instance, 'Love that idea! You could also say...' Make it feel natural, not like teaching.";
+      systemPrompt += "Be playful and enthusiastic! ";
     } else {
-      systemPrompt += "Be warm and encouraging. When you spot areas to improve, naturally incorporate better phrasing in your response as suggestions, not corrections. Example: 'I see what you mean! I might say it like...' Keep it conversational.";
+      systemPrompt += "Be warm and encouraging. ";
     }
     
-    systemPrompt += "\n\nKey rules:\n- NEVER say 'error', 'mistake', 'wrong', or 'incorrect'\n- Weave suggestions naturally into conversation\n- Always acknowledge their point first\n- Frame improvements as alternatives: 'You could also say...', 'Another way is...', 'I might express that as...'\n- Keep responses concise and conversational (2-4 sentences)\n- Make them feel good about practicing";
+    systemPrompt += `
+How to help:
+1. Acknowledge their message warmly
+2. If you notice grammar/vocabulary issues, naturally use the correct form in your response
+3. After your conversational response, add a correction tip on a new line starting with "💡" if there was an error
+
+Format:
+[Your warm, conversational response]
+💡 [Optional subtle tip if there was an error - keep it SHORT and helpful]
+
+Example:
+User: "I goes to market yesterday"
+You: "Oh nice! I went to the market yesterday too. What did you buy?
+💡 Try 'I went' instead of 'I goes' when talking about the past"
+
+Keep main responses short (2-3 sentences), natural, and encouraging.`;
 
     console.log("Making request to AI gateway...");
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

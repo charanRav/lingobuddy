@@ -21,6 +21,7 @@ const ChatBuddy = () => {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [correctionTip, setCorrectionTip] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -147,6 +148,8 @@ const ChatBuddy = () => {
           try {
             const parsed = JSON.parse(jsonStr);
             const content = parsed.choices?.[0]?.delta?.content;
+            const correction = parsed.correction;
+            
             if (content) {
               assistantContent += content;
               setMessages((prev) => {
@@ -158,6 +161,10 @@ const ChatBuddy = () => {
                 }
                 return [...prev, { role: "assistant", content: assistantContent }];
               });
+            }
+            
+            if (correction) {
+              setCorrectionTip(correction);
             }
           } catch (e) {
             console.error("Parse error:", e);
@@ -268,6 +275,13 @@ const ChatBuddy = () => {
                   )}
                 </Button>
               </div>
+              {correctionTip && (
+                <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                    💡 <span className="font-medium">Tip:</span> {correctionTip}
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>

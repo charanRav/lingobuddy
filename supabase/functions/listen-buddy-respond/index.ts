@@ -90,11 +90,21 @@ Be encouraging and keep the conversation flowing naturally.`;
     }
 
     const data = await response.json();
-    const aiResponse = data.choices[0]?.message?.content || "Thanks for sharing! Let's continue...";
+    const fullResponse = data.choices[0]?.message?.content || "Thanks for sharing! Let's continue...";
+    
+    // Extract correction if present (look for patterns like "💡" or parentheses)
+    let aiResponse = fullResponse;
+    let correction = "";
+    
+    const tipMatch = fullResponse.match(/💡\s*(.+?)(?:\n|$)/);
+    if (tipMatch) {
+      correction = tipMatch[1].trim();
+      aiResponse = fullResponse.replace(/💡\s*.+?(?:\n|$)/, '').trim();
+    }
 
     console.log("Successfully generated AI response");
     return new Response(
-      JSON.stringify({ response: aiResponse }),
+      JSON.stringify({ response: aiResponse, correction }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {

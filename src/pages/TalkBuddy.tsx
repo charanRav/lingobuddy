@@ -33,6 +33,7 @@ const TalkBuddy = () => {
   const [timeRemaining, setTimeRemaining] = useState(30 * 60); // 30 minutes in seconds
   const [sessionActive, setSessionActive] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [correctionTip, setCorrectionTip] = useState("");
   const recognitionRef = useRef<any>(null);
   const timerRef = useRef<number | null>(null);
 
@@ -117,6 +118,7 @@ const TalkBuddy = () => {
       if (error) throw error;
 
       const aiResponse = data.message;
+      const correction = data.correction || "";
 
       const assistantMessage: Message = {
         role: "assistant",
@@ -124,6 +126,10 @@ const TalkBuddy = () => {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+      
+      if (correction) {
+        setCorrectionTip(correction);
+      }
       
       // Speak the response
       speakText(aiResponse);
@@ -350,9 +356,18 @@ const TalkBuddy = () => {
         )}
 
         {sessionActive && (
-          <p className="text-center text-muted-foreground text-sm mt-4">
-            {isListening ? "🎤 Listening... Speak now" : isSpeaking ? "🔊 AI is speaking..." : "Tap the microphone to speak"}
-          </p>
+          <>
+            <p className="text-center text-muted-foreground text-sm mt-4">
+              {isListening ? "🎤 Listening... Speak now" : isSpeaking ? "🔊 AI is speaking..." : "Tap the microphone to speak"}
+            </p>
+            {correctionTip && (
+              <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg max-w-2xl mx-auto">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  💡 <span className="font-medium">Tip:</span> {correctionTip}
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

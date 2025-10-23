@@ -33,6 +33,7 @@ const ListenBuddy = () => {
   const [words, setWords] = useState<string[]>([]);
   const [userResponse, setUserResponse] = useState("");
   const [isListening, setIsListening] = useState(false);
+  const [correctionTip, setCorrectionTip] = useState("");
   const { toast } = useToast();
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
@@ -73,6 +74,36 @@ const ListenBuddy = () => {
         title: "Conversation Generated",
         description: "Ready to listen!",
       });
+
+      // Auto-play if voice mode
+      if (mode === "voice") {
+        setTimeout(() => {
+          const utterance = new SpeechSynthesisUtterance(generatedConversation);
+          utteranceRef.current = utterance;
+          utterance.rate = 0.9;
+          utterance.pitch = 1;
+          
+          let wordCount = 0;
+          utterance.onboundary = (event) => {
+            if (event.name === 'word') {
+              setCurrentWordIndex(wordCount);
+              wordCount++;
+            }
+          };
+
+          utterance.onend = () => {
+            setIsPlaying(false);
+            setCurrentWordIndex(-1);
+          };
+
+          utterance.onerror = () => {
+            setIsPlaying(false);
+          };
+
+          speechSynthesis.speak(utterance);
+          setIsPlaying(true);
+        }, 500);
+      }
     } catch (error) {
       console.error('Error generating conversation:', error);
       toast({
@@ -209,9 +240,14 @@ const ListenBuddy = () => {
       }
 
       const aiResponse = data.response;
+      const correction = data.correction || "";
       const buddyMessage = `\n\nBuddy: ${aiResponse}`;
       setConversation(prev => prev + buddyMessage);
       setWords((prev) => [...prev, ...aiResponse.split(/\s+/)]);
+      
+      if (correction) {
+        setCorrectionTip(correction);
+      }
       
       if (mode === "voice") {
         const utterance = new SpeechSynthesisUtterance(aiResponse);
@@ -408,6 +444,13 @@ const ListenBuddy = () => {
                     >
                       {isGenerating ? "Generating AI Response..." : "Send Response"}
                     </Button>
+                    {correctionTip && (
+                      <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                        <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                          💡 <span className="font-medium">Tip:</span> {correctionTip}
+                        </p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </motion.div>

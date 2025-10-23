@@ -87,10 +87,20 @@ Keep responses short (2-3 sentences), natural, and encouraging. Focus on convers
     }
 
     const data = await response.json();
-    const aiMessage = data.choices[0]?.message?.content || "I didn't catch that. Could you try again?";
+    const fullMessage = data.choices[0]?.message?.content || "I didn't catch that. Could you try again?";
+    
+    // Extract correction if present
+    let aiMessage = fullMessage;
+    let correction = "";
+    
+    const tipMatch = fullMessage.match(/💡\s*(.+?)(?:\n|$)/);
+    if (tipMatch) {
+      correction = tipMatch[1].trim();
+      aiMessage = fullMessage.replace(/💡\s*.+?(?:\n|$)/, '').trim();
+    }
 
     return new Response(
-      JSON.stringify({ message: aiMessage }),
+      JSON.stringify({ message: aiMessage, correction }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
