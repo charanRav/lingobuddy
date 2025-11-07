@@ -32,12 +32,14 @@ const Auth = () => {
       (event, session) => {
         setSession(session);
         
-        // Redirect on sign in
-        if (session && event === "SIGNED_IN") {
+        // Redirect based on user status
+        if (session) {
           const hasSeenStory = session.user?.user_metadata?.has_seen_story;
-          if (hasSeenStory) {
+          
+          // New signups go to story, returning users go to dashboard
+          if (event === "SIGNED_IN" && hasSeenStory) {
             navigate("/dashboard");
-          } else {
+          } else if (event === "SIGNED_IN" && !hasSeenStory) {
             navigate("/story");
           }
         }
@@ -49,11 +51,7 @@ const Auth = () => {
       setSession(session);
       if (session) {
         const hasSeenStory = session.user?.user_metadata?.has_seen_story;
-        if (hasSeenStory) {
-          navigate("/dashboard");
-        } else {
-          navigate("/story");
-        }
+        navigate(hasSeenStory ? "/dashboard" : "/story");
       }
     });
 
