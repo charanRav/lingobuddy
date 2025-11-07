@@ -28,6 +28,8 @@ const ReadBuddy = () => {
   const [difficultWords, setDifficultWords] = useState<string[]>([]);
   const [highlightDifficult, setHighlightDifficult] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [wordDefinitions, setWordDefinitions] = useState<Record<string, string>>({});
+  const [showingDefinition, setShowingDefinition] = useState<string | null>(null);
   const { toast } = useToast();
 
   const generateContent = async () => {
@@ -50,10 +52,11 @@ const ReadBuddy = () => {
 
       setContent(data.content);
       setDifficultWords(data.difficultWords);
+      setWordDefinitions(data.definitions || {});
 
       toast({
         title: "Content Generated",
-        description: "Click any word to hear its pronunciation!",
+        description: "Click any word to hear and learn its meaning!",
       });
     } catch (error) {
       console.error('Error generating content:', error);
@@ -68,10 +71,17 @@ const ReadBuddy = () => {
   };
 
   const speakWord = (word: string) => {
-    const utterance = new SpeechSynthesisUtterance(word);
+    const cleanWord = word.replace(/[.,!?;:"'()]/g, '').toLowerCase();
+    const utterance = new SpeechSynthesisUtterance(cleanWord);
     utterance.rate = 0.8;
     utterance.pitch = 1;
     speechSynthesis.speak(utterance);
+    
+    // Show definition if available
+    if (wordDefinitions[cleanWord]) {
+      setShowingDefinition(cleanWord);
+      setTimeout(() => setShowingDefinition(null), 3000);
+    }
   };
 
   const renderContent = () => {
@@ -86,17 +96,31 @@ const ReadBuddy = () => {
           const isDifficult = difficultWords.includes(cleanWord);
           const isWord = /\w/.test(word);
 
+          const definition = wordDefinitions[cleanWord];
+          const isShowingDef = showingDefinition === cleanWord;
+
           return (
-            <span
-              key={index}
-              onClick={() => isWord && speakWord(word)}
-              className={`
-                ${isWord ? 'cursor-pointer hover:bg-primary/10 rounded px-0.5 transition-colors' : ''}
-                ${highlightDifficult && isDifficult ? 'bg-yellow-200/50 dark:bg-yellow-900/30 font-semibold' : ''}
-              `}
-              title={isWord ? "Click to hear pronunciation" : ""}
-            >
-              {word}
+            <span key={index} className="relative inline-block">
+              <span
+                onClick={() => isWord && speakWord(word)}
+                className={`
+                  ${isWord ? 'cursor-pointer hover:bg-primary/10 rounded px-0.5 transition-colors' : ''}
+                  ${highlightDifficult && isDifficult ? 'bg-yellow-200/50 dark:bg-yellow-900/30 font-semibold' : ''}
+                `}
+                title={isWord ? "Click to hear pronunciation" : ""}
+              >
+                {word}
+              </span>
+              {isShowingDef && definition && (
+                <motion.span
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-popover text-popover-foreground text-xs rounded shadow-lg whitespace-nowrap z-10 border"
+                >
+                  {definition}
+                </motion.span>
+              )}
             </span>
           );
         })}
@@ -190,7 +214,7 @@ const ReadBuddy = () => {
                     <CardTitle className="text-xl">Reading Material</CardTitle>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Volume2 className="w-4 h-4" />
-                      <span>Click any word to hear it</span>
+                      <span>Click any word to hear & learn</span>
                     </div>
                   </div>
                 </CardHeader>

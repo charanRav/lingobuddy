@@ -46,7 +46,18 @@ Guidelines:
 - Each paragraph should be 3-5 sentences
 - Use vocabulary that's challenging but accessible
 
-No title needed - just the content paragraphs.`;
+CRITICAL: You must respond with ONLY valid JSON in this exact format:
+{
+  "content": "your paragraphs here",
+  "difficult_words": ["word1", "word2"],
+  "definitions": {
+    "word1": "1-3 word definition",
+    "word2": "1-3 word definition"
+  }
+}
+
+For difficult_words, include words 8+ letters. For definitions, keep them extremely brief (1-3 words max).
+Examples: "relating to space", "very large", "to examine carefully"`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -87,14 +98,30 @@ No title needed - just the content paragraphs.`;
     const data = await response.json();
     const content = data.choices[0].message.content;
 
-    // Identify difficult words (longer than 8 characters as a simple heuristic)
-    const words = content.match(/\b[\w']+\b/g) || [];
-    const difficultWords = words.filter((word: string) => word.length > 8);
-    const uniqueDifficultWords = [...new Set(difficultWords.map((w: string) => w.toLowerCase()))];
+    // Try to parse JSON response
+    let parsedResponse;
+    try {
+      parsedResponse = JSON.parse(content);
+    } catch (e) {
+      console.log('AI did not return JSON, falling back to manual extraction');
+      // Fallback: extract difficult words manually
+      const words = content.match(/\b[\w']+\b/g) || [];
+      const difficultWords = words.filter((word: string) => word.length > 8);
+      const uniqueDifficultWords = [...new Set(difficultWords.map((w: string) => w.toLowerCase()))];
+      
+      return new Response(JSON.stringify({ 
+        content,
+        difficultWords: uniqueDifficultWords,
+        definitions: {}
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     return new Response(JSON.stringify({ 
-      content,
-      difficultWords: uniqueDifficultWords
+      content: parsedResponse.content,
+      difficultWords: parsedResponse.difficult_words || [],
+      definitions: parsedResponse.definitions || {}
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
