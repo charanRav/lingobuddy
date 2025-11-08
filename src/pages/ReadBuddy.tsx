@@ -87,41 +87,50 @@ const ReadBuddy = () => {
   const renderContent = () => {
     if (!content) return null;
 
-    const words = content.split(/(\s+)/);
+    // Split content by paragraphs (double newlines or single newlines)
+    const paragraphs = content.split(/\n\n|\n/).filter(p => p.trim());
     
     return (
-      <div className="leading-relaxed text-base">
-        {words.map((word, index) => {
-          const cleanWord = word.replace(/[.,!?;:"'()]/g, '').toLowerCase();
-          const isDifficult = difficultWords.includes(cleanWord);
-          const isWord = /\w/.test(word);
-
-          const definition = wordDefinitions[cleanWord];
-          const isShowingDef = showingDefinition === cleanWord;
-
+      <div className="space-y-4">
+        {paragraphs.map((paragraph, pIndex) => {
+          const words = paragraph.split(/(\s+)/);
+          
           return (
-            <span key={index} className="relative inline-block">
-              <span
-                onClick={() => isWord && speakWord(word)}
-                className={`
-                  ${isWord ? 'cursor-pointer hover:bg-primary/10 rounded px-0.5 transition-colors' : ''}
-                  ${highlightDifficult && isDifficult ? 'bg-yellow-200/50 dark:bg-yellow-900/30 font-semibold' : ''}
-                `}
-                title={isWord ? "Click to hear pronunciation" : ""}
-              >
-                {word}
-              </span>
-              {isShowingDef && definition && (
-                <motion.span
-                  initial={{ opacity: 0, y: -5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-popover text-popover-foreground text-xs rounded shadow-lg whitespace-nowrap z-10 border"
-                >
-                  {definition}
-                </motion.span>
-              )}
-            </span>
+            <p key={pIndex} className="leading-relaxed text-base">
+              {words.map((word, index) => {
+                const cleanWord = word.replace(/[.,!?;:"'()]/g, '').toLowerCase();
+                const isDifficult = difficultWords.includes(cleanWord);
+                const isWord = /\w/.test(word);
+
+                const definition = wordDefinitions[cleanWord];
+                const isShowingDef = showingDefinition === cleanWord;
+
+                return (
+                  <span key={index} className="relative inline-block">
+                    <span
+                      onClick={() => isWord && speakWord(word)}
+                      className={`
+                        ${isWord ? 'cursor-pointer hover:bg-primary/10 rounded px-0.5 transition-colors' : ''}
+                        ${highlightDifficult && isDifficult ? 'bg-yellow-200/50 dark:bg-yellow-900/30 font-semibold' : ''}
+                      `}
+                      title={isWord ? "Click to hear pronunciation" : ""}
+                    >
+                      {word}
+                    </span>
+                    {isShowingDef && definition && (
+                      <motion.span
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-popover text-popover-foreground text-xs rounded shadow-lg whitespace-nowrap z-10 border"
+                      >
+                        {definition}
+                      </motion.span>
+                    )}
+                  </span>
+                );
+              })}
+            </p>
           );
         })}
       </div>

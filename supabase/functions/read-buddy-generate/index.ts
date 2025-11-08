@@ -36,7 +36,7 @@ serve(async (req) => {
 
     const systemPrompt = `You are LingoBuddy's reading content generator.
 
-Create engaging reading material on: "${topic}"
+Create engaging, natural reading material on the topic: "${topic}"
 
 Guidelines:
 - Write 3-4 well-structured paragraphs
@@ -45,19 +45,25 @@ Guidelines:
 - Make it interesting, informative, and naturally flowing
 - Each paragraph should be 3-5 sentences
 - Use vocabulary that's challenging but accessible
+- Write in a clear, engaging style like you're explaining to a friend
 
-CRITICAL: You must respond with ONLY valid JSON in this exact format:
+CRITICAL FORMAT: Respond with ONLY valid JSON. No markdown, no code blocks, just pure JSON:
 {
-  "content": "your paragraphs here",
-  "difficult_words": ["word1", "word2"],
+  "content": "Your full reading content here as natural paragraphs with proper spacing between paragraphs.",
+  "difficult_words": ["word1", "word2", "word3"],
   "definitions": {
-    "word1": "1-3 word definition",
-    "word2": "1-3 word definition"
+    "word1": "brief definition",
+    "word2": "brief definition",
+    "word3": "brief definition"
   }
 }
 
-For difficult_words, include words 8+ letters. For definitions, keep them extremely brief (1-3 words max).
-Examples: "relating to space", "very large", "to examine carefully"`;
+RULES:
+- For "content": Write flowing paragraphs separated by double newlines (\n\n)
+- For "difficult_words": List 8-10 challenging words (8+ letters) from the content
+- For "definitions": Keep each definition 1-3 words maximum
+- Examples of good definitions: "relating to space", "very large", "to examine"
+- DO NOT include any markdown formatting, code blocks, or extra text outside the JSON`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
