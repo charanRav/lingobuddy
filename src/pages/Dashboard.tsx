@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Mic, Headphones, BookOpen, Settings, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { UsageDisplay } from "@/components/UsageDisplay";
 
 const buddyModes = [
   {
@@ -91,6 +92,16 @@ const Dashboard = () => {
             <Settings className="w-4 h-4" />
             <span className="hidden sm:inline">Settings</span>
           </Button>
+        </motion.div>
+
+        {/* Usage Display */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="mb-6"
+        >
+          <UsageDisplay />
         </motion.div>
 
         <motion.div

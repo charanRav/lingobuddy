@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
@@ -16,6 +17,48 @@ serve(async (req) => {
   }
 
   try {
+    // Initialize Supabase client
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Missing authorization header" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    // Get user
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Check daily usage limit
+    const { data: usageData, error: usageError } = await supabaseClient.rpc('get_daily_usage', {
+      p_user_id: user.id,
+      p_feature: 'talk'
+    });
+
+    if (usageError) {
+      console.error("Usage check error:", usageError);
+    }
+
+    const totalUsage = usageData || 0;
+    if (totalUsage >= 50) {
+      return new Response(
+        JSON.stringify({ error: "Daily limit of 50 conversations reached. Limit resets at midnight." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const body = await req.json();
     
     // Validate input
@@ -120,6 +163,12 @@ Keep responses conversational (2-3 sentences) but ALWAYS provide corrections whe
       correction = tipMatch[1].trim();
       aiMessage = fullMessage.replace(/💡\s*.+?(?:\n|$)/, '').trim();
     }
+
+    // Increment usage count
+    await supabaseClient.rpc('increment_usage', {
+      p_user_id: user.id,
+      p_feature: 'talk'
+    });
 
     return new Response(
       JSON.stringify({ message: aiMessage, correction }),
