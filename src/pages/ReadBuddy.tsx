@@ -50,9 +50,30 @@ const ReadBuddy = () => {
 
       if (error) throw error;
 
-      setContent(data.content);
-      setDifficultWords(data.difficultWords);
-      setWordDefinitions(data.definitions || {});
+      // Handle if the response is a string that needs parsing
+      let parsedData = data;
+      if (typeof data === 'string') {
+        try {
+          parsedData = JSON.parse(data);
+        } catch (e) {
+          // If it's not valid JSON, treat the whole string as content
+          console.warn('Response is not JSON, using as plain content');
+          parsedData = {
+            content: data,
+            difficultWords: [],
+            definitions: {}
+          };
+        }
+      }
+
+      // Ensure we have the correct data structure
+      const contentText = parsedData.content || parsedData.generatedText || '';
+      const words = parsedData.difficultWords || parsedData.difficult_words || [];
+      const defs = parsedData.definitions || {};
+
+      setContent(contentText);
+      setDifficultWords(words);
+      setWordDefinitions(defs);
 
       toast({
         title: "Content Generated",
