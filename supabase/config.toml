@@ -1,1 +1,16 @@
 project_id = "oufatfjbdjezsfvvjhcp"
+
+[functions.chat-buddy]
+verify_jwt = true
+
+[functions.talk-buddy-chat]
+verify_jwt = true
+
+[functions.listen-buddy-generate]
+verify_jwt = true
+
+[functions.listen-buddy-respond]
+verify_jwt = true
+
+[functions.read-buddy-generate]
+verify_jwt = true
