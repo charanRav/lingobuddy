@@ -24,6 +24,18 @@ const ChatBuddy = () => {
   const [correctionTip, setCorrectionTip] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Check authentication on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/auth');
+        return;
+      }
+    };
+    checkAuth();
+  }, [navigate]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -87,14 +99,24 @@ const ChatBuddy = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
+      if (!session) {
+        toast({
+          title: "Authentication required",
+          description: "Please sign in to continue",
+          variant: "destructive",
+        });
+        navigate('/auth');
+        return;
+      }
+      
       const response = await fetch(
-        'https://oufatfjbdjezsfvvjhcp.supabase.co/functions/v1/chat-buddy',
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat-buddy`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token}`,
-            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im91ZmF0ZmpiZGplenNmdnZqaGNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA3NzA4MDEsImV4cCI6MjA3NjM0NjgwMX0.fVugpzUQoUd9foFBM4WMMOpqSzK_2yLV54YEP-k97LI',
+            'Authorization': `Bearer ${session.access_token}`,
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
             'x-buddy-personality': personality,
           },
           body: JSON.stringify({
