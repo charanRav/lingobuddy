@@ -20,7 +20,7 @@ serve(async (req) => {
   }
 
   try {
-    // Initialize Supabase client
+    // Get JWT from Authorization header (already verified by Supabase since verify_jwt = true)
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       return new Response(
@@ -29,24 +29,36 @@ serve(async (req) => {
       );
     }
 
+    // Extract and decode JWT to get user ID (JWT is already verified by Supabase)
+    const jwt = authHeader.replace('Bearer ', '');
+    const parts = jwt.split('.');
+    if (parts.length !== 3) {
+      return new Response(
+        JSON.stringify({ error: "Invalid token format" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    const payload = JSON.parse(atob(parts[1]));
+    const userId = payload.sub;
+    
+    if (!userId) {
+      return new Response(
+        JSON.stringify({ error: "Invalid token payload" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Create Supabase client for database operations
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       { global: { headers: { Authorization: authHeader } } }
     );
 
-    // Get user
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
-    if (userError || !user) {
-      return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     // Check daily usage limit (50 total across all features)
     const { data: usageData, error: usageError } = await supabaseClient.rpc('get_daily_usage', {
-      p_user_id: user.id,
+      p_user_id: userId,
       p_feature: 'chat'
     });
 
@@ -171,7 +183,7 @@ Be encouraging but honest. If they make mistakes, help them learn! Keep tips cle
 
     // Increment usage count
     await supabaseClient.rpc('increment_usage', {
-      p_user_id: user.id,
+      p_user_id: userId,
       p_feature: 'chat'
     });
 
