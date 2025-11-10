@@ -146,20 +146,54 @@ const TalkBuddy = () => {
   const speakText = (text: string) => {
     if ('speechSynthesis' in window) {
       setIsSpeaking(true);
+      
+      // Get user voice preferences from localStorage
+      const voiceGender = localStorage.getItem("voiceGender") || "female";
+      const accentPreference = localStorage.getItem("accentPreference") || "us";
+      
+      // Map accent codes to language codes
+      const accentMap: Record<string, string[]> = {
+        us: ['en-US'],
+        uk: ['en-GB'],
+        au: ['en-AU'],
+        in: ['en-IN']
+      };
+      
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-US';
       utterance.rate = 0.95;
-      utterance.pitch = 1.0;
+      utterance.pitch = voiceGender === "female" ? 1.1 : 0.9;
       utterance.volume = 1.0;
       
-      // Try to use a more natural voice
+      // Get available voices
       const voices = window.speechSynthesis.getVoices();
-      const preferredVoice = voices.find(voice => 
-        voice.lang.includes('en') && (voice.name.includes('Natural') || voice.name.includes('Premium'))
-      ) || voices.find(voice => voice.lang.includes('en-US'));
+      const targetLangs = accentMap[accentPreference] || ['en-US'];
       
-      if (preferredVoice) {
-        utterance.voice = preferredVoice;
+      // Find the best matching voice based on gender and accent
+      let selectedVoice = voices.find(voice => {
+        const matchesLang = targetLangs.some(lang => voice.lang.includes(lang));
+        const matchesGender = voiceGender === "female" 
+          ? voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('woman') || voice.name.toLowerCase().includes('samantha') || voice.name.toLowerCase().includes('karen')
+          : voice.name.toLowerCase().includes('male') || voice.name.toLowerCase().includes('man') || voice.name.toLowerCase().includes('daniel') || voice.name.toLowerCase().includes('alex');
+        return matchesLang && matchesGender;
+      });
+      
+      // Fallback: try to match just the accent
+      if (!selectedVoice) {
+        selectedVoice = voices.find(voice => 
+          targetLangs.some(lang => voice.lang.includes(lang))
+        );
+      }
+      
+      // Final fallback: use any English voice
+      if (!selectedVoice) {
+        selectedVoice = voices.find(voice => voice.lang.includes('en'));
+      }
+      
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+        utterance.lang = selectedVoice.lang;
+      } else {
+        utterance.lang = targetLangs[0];
       }
       
       utterance.onend = () => {
