@@ -94,7 +94,7 @@ const ReadBuddy = () => {
   const speakWord = (word: string) => {
     const cleanWord = word.replace(/[.,!?;:"'()]/g, '').toLowerCase();
     const utterance = new SpeechSynthesisUtterance(cleanWord);
-    utterance.rate = 0.8;
+    utterance.rate = 0.6; // Slower for better understanding
     utterance.pitch = 1;
     speechSynthesis.speak(utterance);
     

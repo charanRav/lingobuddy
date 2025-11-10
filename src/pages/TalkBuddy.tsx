@@ -147,8 +147,7 @@ const TalkBuddy = () => {
     if ('speechSynthesis' in window) {
       setIsSpeaking(true);
       
-      // Get user voice preferences from localStorage
-      const voiceGender = localStorage.getItem("voiceGender") || "female";
+      // Get user accent preference from localStorage
       const accentPreference = localStorage.getItem("accentPreference") || "us";
       
       // Map accent codes to language codes
@@ -161,28 +160,17 @@ const TalkBuddy = () => {
       
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 0.95;
-      utterance.pitch = voiceGender === "female" ? 1.1 : 0.9;
+      utterance.pitch = 1.0;
       utterance.volume = 1.0;
       
       // Get available voices
       const voices = window.speechSynthesis.getVoices();
       const targetLangs = accentMap[accentPreference] || ['en-US'];
       
-      // Find the best matching voice based on gender and accent
-      let selectedVoice = voices.find(voice => {
-        const matchesLang = targetLangs.some(lang => voice.lang.includes(lang));
-        const matchesGender = voiceGender === "female" 
-          ? voice.name.toLowerCase().includes('female') || voice.name.toLowerCase().includes('woman') || voice.name.toLowerCase().includes('samantha') || voice.name.toLowerCase().includes('karen')
-          : voice.name.toLowerCase().includes('male') || voice.name.toLowerCase().includes('man') || voice.name.toLowerCase().includes('daniel') || voice.name.toLowerCase().includes('alex');
-        return matchesLang && matchesGender;
-      });
-      
-      // Fallback: try to match just the accent
-      if (!selectedVoice) {
-        selectedVoice = voices.find(voice => 
-          targetLangs.some(lang => voice.lang.includes(lang))
-        );
-      }
+      // Find the best matching voice based on accent
+      let selectedVoice = voices.find(voice => 
+        targetLangs.some(lang => voice.lang.includes(lang))
+      );
       
       // Final fallback: use any English voice
       if (!selectedVoice) {

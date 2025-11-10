@@ -20,9 +20,6 @@ const Settings = () => {
   const [accentPreference, setAccentPreference] = useState(() =>
     localStorage.getItem("accentPreference") || "us"
   );
-  const [voiceGender, setVoiceGender] = useState(() =>
-    localStorage.getItem("voiceGender") || "female"
-  );
 
   useEffect(() => {
     setMounted(true);
@@ -44,11 +41,6 @@ const Settings = () => {
   const handleAccentChange = (value: string) => {
     setAccentPreference(value);
     localStorage.setItem("accentPreference", value);
-  };
-
-  const handleVoiceGenderChange = (value: string) => {
-    setVoiceGender(value);
-    localStorage.setItem("voiceGender", value);
   };
 
   if (!mounted) {
@@ -136,22 +128,6 @@ const Settings = () => {
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Voice Preferences</h3>
                 
-                {/* Voice Gender */}
-                <div className="p-4 rounded-lg border bg-card">
-                  <Label htmlFor="voice-gender" className="mb-3 block">
-                    Voice Gender
-                  </Label>
-                  <Select value={voiceGender} onValueChange={handleVoiceGenderChange}>
-                    <SelectTrigger id="voice-gender">
-                      <SelectValue placeholder="Select voice gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="female">👩 Female Voice</SelectItem>
-                      <SelectItem value="male">👨 Male Voice</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 {/* Accent */}
                 <div className="p-4 rounded-lg border bg-card">
                   <Label htmlFor="accent" className="mb-3 block">
