@@ -93,8 +93,11 @@ const ReadBuddy = () => {
 
   const speakWord = (word: string) => {
     const cleanWord = word.replace(/[.,!?;:"'()]/g, '').toLowerCase();
+    const savedSpeed = localStorage.getItem("pronunciationSpeed");
+    const speed = savedSpeed ? parseFloat(savedSpeed) : 1.0;
+    
     const utterance = new SpeechSynthesisUtterance(cleanWord);
-    utterance.rate = 0.6; // Slower for better understanding
+    utterance.rate = speed;
     utterance.pitch = 1;
     speechSynthesis.speak(utterance);
     

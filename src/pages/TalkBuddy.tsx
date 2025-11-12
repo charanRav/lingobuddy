@@ -147,8 +147,10 @@ const TalkBuddy = () => {
     if ('speechSynthesis' in window) {
       setIsSpeaking(true);
       
-      // Get user accent preference from localStorage
+      // Get user preferences from localStorage
       const accentPreference = localStorage.getItem("accentPreference") || "us";
+      const savedSpeed = localStorage.getItem("pronunciationSpeed");
+      const speed = savedSpeed ? parseFloat(savedSpeed) : 1.0;
       
       // Map accent codes to language codes
       const accentMap: Record<string, string[]> = {
@@ -159,7 +161,7 @@ const TalkBuddy = () => {
       };
       
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.95;
+      utterance.rate = speed;
       utterance.pitch = 1.0;
       utterance.volume = 1.0;
       

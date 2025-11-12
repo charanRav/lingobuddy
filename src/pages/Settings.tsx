@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import { Settings as SettingsIcon, Moon, Sun, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
@@ -20,6 +21,10 @@ const Settings = () => {
   const [accentPreference, setAccentPreference] = useState(() =>
     localStorage.getItem("accentPreference") || "us"
   );
+  const [pronunciationSpeed, setPronunciationSpeed] = useState(() => {
+    const saved = localStorage.getItem("pronunciationSpeed");
+    return saved ? parseFloat(saved) : 1.0;
+  });
 
   useEffect(() => {
     setMounted(true);
@@ -41,6 +46,12 @@ const Settings = () => {
   const handleAccentChange = (value: string) => {
     setAccentPreference(value);
     localStorage.setItem("accentPreference", value);
+  };
+
+  const handleSpeedChange = (value: number[]) => {
+    const speed = value[0];
+    setPronunciationSpeed(speed);
+    localStorage.setItem("pronunciationSpeed", speed.toString());
   };
 
   if (!mounted) {
@@ -144,6 +155,34 @@ const Settings = () => {
                       <SelectItem value="in">🇮🇳 Indian English</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* Pronunciation Speed */}
+                <div className="p-4 rounded-lg border bg-card">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="speed-slider">
+                        Pronunciation Speed
+                      </Label>
+                      <span className="text-sm text-muted-foreground">
+                        {pronunciationSpeed.toFixed(1)}x
+                      </span>
+                    </div>
+                    <Slider
+                      id="speed-slider"
+                      min={0.5}
+                      max={1.5}
+                      step={0.1}
+                      value={[pronunciationSpeed]}
+                      onValueChange={handleSpeedChange}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Slow (0.5x)</span>
+                      <span>Normal (1.0x)</span>
+                      <span>Fast (1.5x)</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </CardContent>
