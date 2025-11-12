@@ -157,14 +157,24 @@ RULES:
     }
 
     const data = await response.json();
-    const content = data.choices[0].message.content;
+    let content = data.choices[0].message.content;
+
+    // Strip markdown code block formatting if present
+    content = content.trim();
+    if (content.startsWith('```json')) {
+      content = content.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    } else if (content.startsWith('```')) {
+      content = content.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
 
     // Try to parse JSON response
     let parsedResponse;
     try {
       parsedResponse = JSON.parse(content);
     } catch (e) {
-      console.log('AI did not return JSON, falling back to manual extraction');
+      console.log('AI did not return valid JSON, falling back to manual extraction');
+      console.log('Content received:', content.substring(0, 200));
+      
       // Fallback: extract difficult words manually
       const words = content.match(/\b[\w']+\b/g) || [];
       const difficultWords = words.filter((word: string) => word.length > 8);
